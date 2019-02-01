@@ -34,7 +34,6 @@ fn extract_sshkey_from_profile(
         .and_then(|accounts| extract_ssh_service(accounts.to_owned()))
         .and_then(|ssh_service| extract_ssh_public_key(&ssh_service))
         .ok_or("Unable to extract SSH key")
-    //.and_then(|ssh_key| Some(ssh_key))
 }
 
 fn retrieve_user_profile(username: &str) -> serde_json::Value {
