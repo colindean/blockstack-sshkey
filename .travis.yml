@@ -31,7 +31,7 @@ deploy:
   file_glob: true
   skip_cleanup: true
   on:
-    repo: colindean/blocktap-sshkey
+    repo: colindean/blockstack-sshkey
     condition: $TRAVIS_RUST_VERSION = nightly
     branch: master  # i guess we do need this after all?
     tags: true
