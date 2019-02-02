@@ -17,6 +17,10 @@ Tap and install with:
     brew tap colindean/blockstack-sshkey https://github.com/colindean/blockstack-sshkey.git
     brew install blockstack-sshkey-bin
 
+Alternatively, download the latest release [here](https://github.com/colindean/blockstack-sshkey/releases/latest).
+
+For Windows, you can use the MSVC version if you already have the 2015 Visual C++ Runtime already installed. Otherwise, try the GNU version.
+
 ## Releasing
 
 Releases are built when tags are pushed to CI.
