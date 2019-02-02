@@ -6,7 +6,7 @@ pub fn extract_sshkey_from_profile(
         .and_then(extract_accounts)
         .and_then(extract_ssh_service)
         .and_then(extract_ssh_public_key)
-        .ok_or(String::from("Unable to extract SSH key"))
+        .ok_or_else(|| String::from("Unable to extract SSH key"))
 }
 
 fn extract_user_profile(
