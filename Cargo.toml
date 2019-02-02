@@ -1,6 +1,6 @@
 [package]
 name = "blockstack-sshkey"
-version = "0.1.4-alpha.0"
+version = "0.1.4"
 authors = ["Colin Dean <git@cad.cx>"]
 edition = "2018"
 license = "GPL-3.0-or-later"
