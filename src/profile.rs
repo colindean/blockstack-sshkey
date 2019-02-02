@@ -4,7 +4,7 @@ use std::fmt;
 pub fn extract_sshkey_from_profile(
     username: &str,
     profile_json: serde_json::Value,
-) -> Result<String, String> {
+) -> Result<String, ExtractionError> {
     extract_user_profile(username, &profile_json)
         .and_then(extract_accounts)
         .and_then(extract_ssh_service)
@@ -14,50 +14,45 @@ pub fn extract_sshkey_from_profile(
 fn extract_user_profile(
     username: &str,
     profile_json: &serde_json::Value,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, ExtractionError> {
     profile_json
         .get(username)
         .map(|val| val.to_owned())
-        .ok_or_else(|| {
-            String::from(format!(
-                "The user property '{}' is missing from the JSON object.",
-                username
-            ))
-        })
+        .ok_or(ExtractionError::new(Kind::MissingUserProperty(String::from(username))))
+
 }
 
 //TODO: model the profile object as a struct and let serde handle this
 //      This would reduce these next few methods to something like
 //      profile.accounts.find(|item|item.service == "ssh").map(|ssh|ssh.identifer)
 //      with the cost of maintaining the struct…
-fn extract_accounts(profile_json: serde_json::Value) -> Result<Vec<serde_json::Value>, String> {
+fn extract_accounts(profile_json: serde_json::Value) -> Result<Vec<serde_json::Value>, ExtractionError> {
     let accounts_value = &profile_json["profile"]["account"];
     accounts_value
         .as_array()
         .map(|array| array.to_vec())
-        .ok_or_else(|| String::from("The profile or its account object are missing."))
+        .ok_or(ExtractionError::new(Kind::MissingProfileOrAccount))
 }
 
-fn extract_ssh_service(accounts: Vec<serde_json::Value>) -> Result<serde_json::Value, String> {
+fn extract_ssh_service(accounts: Vec<serde_json::Value>) -> Result<serde_json::Value, ExtractionError> {
     accounts
         .iter()
         .find(|item| item["service"] == "ssh")
         .map(|val| val.to_owned())
-        .ok_or_else(|| String::from("No service of type ssh was found in profile account list."))
+        .ok_or(ExtractionError::new(Kind::MissingSshService))
 }
 
-fn extract_ssh_public_key(ssh_account: serde_json::Value) -> Result<String, String> {
+fn extract_ssh_public_key(ssh_account: serde_json::Value) -> Result<String, ExtractionError> {
     let id = &ssh_account["identifier"];
-    id.as_str().map(String::from).ok_or_else(|| {
-        String::from(
-            "The SSH service is present but missing its identifier, which is the key text.",
-        )
-    })
+    id.as_str().map(String::from).ok_or(ExtractionError::new(Kind::MissingSshIdentifier))
+
 }
 
+#[derive(PartialEq)]
 pub struct ExtractionError {
     inner: Box<ErrorInner>,
 }
+#[derive(PartialEq)]
 struct ErrorInner {
     kind: Kind,
 }
@@ -70,7 +65,7 @@ impl ExtractionError {
         }
     }
 }
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) enum Kind {
     MissingUserProperty(String),
     MissingProfileOrAccount,
@@ -102,6 +97,12 @@ impl StdError for ExtractionError {
             Kind::MissingSshService => "No service of type ssh was found in profile account list.",
             Kind::MissingSshIdentifier => "The SSH service is present but missing its identifier, which is the key text.",
         }
+    }
+}
+
+impl From<ExtractionError> for String {
+    fn from(ee: ExtractionError) -> String {
+        format!("{}", ee)
     }
 }
 
@@ -146,9 +147,7 @@ fn test_no_sshkey_identifier() {
     let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
     assert_eq!(
         extract_sshkey_from_profile("test", json),
-        Err(String::from(
-            "The SSH service is present but missing its identifier, which is the key text."
-        ))
+        Err(ExtractionError::new(Kind::MissingSshIdentifier))
     )
 }
 
@@ -165,9 +164,34 @@ fn test_no_ssh_service() {
     let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
     assert_eq!(
         extract_sshkey_from_profile("test", json),
-        Err(String::from(
-            "No service of type ssh was found in profile account list."
-        ))
+        Err(ExtractionError::new(Kind::MissingSshService))
+    )
+}
+
+#[test]
+fn test_no_profile() {
+    let json_text = r#"
+      {"test": {} }
+    "#;
+    let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
+    assert_eq!(
+        extract_sshkey_from_profile("test", json),
+        Err(ExtractionError::new(Kind::MissingProfileOrAccount))
+    )
+}
+
+#[test]
+fn test_no_account() {
+    let json_text = r#"
+      {"test": {
+        "profile": { }
+        }
+      }
+    "#;
+    let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
+    assert_eq!(
+        extract_sshkey_from_profile("test", json),
+        Err(ExtractionError::new(Kind::MissingProfileOrAccount))
     )
 }
 
@@ -179,8 +203,6 @@ fn test_no_user_property() {
     let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
     assert_eq!(
         extract_sshkey_from_profile("test", json),
-        Err(String::from(
-            "The user property 'test' is missing from the JSON object."
-        ))
+        Err(ExtractionError::new(Kind::MissingUserProperty(String::from("test"))))
     )
 }
