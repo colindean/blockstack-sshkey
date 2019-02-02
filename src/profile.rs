@@ -34,5 +34,5 @@ fn extract_ssh_service(accounts: Vec<serde_json::Value>) -> Option<serde_json::V
 
 fn extract_ssh_public_key(ssh_account: serde_json::Value) -> Option<String> {
     let id = &ssh_account["identifier"];
-    id.as_str().map(|s| String::from(s))
+    id.as_str().map(String::from)
 }
