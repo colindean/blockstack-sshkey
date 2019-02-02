@@ -7,6 +7,16 @@ to retrieve that profile and extract the SSH key from it in a format that
 enables a direct-to-`authorized_keys` pipeline:
 
     blockstack-sshkey colindean.id >> ~/.ssh/authorized_keys
+    
+## Installation
+
+[Homebrew](https://brew.sh) is the supported method of installing binaries.
+
+Tap and install with:
+
+    brew tap colindean/blockstack-sshkey https://github.com/colindean/blockstack-sshkey.git
+    brew install blockstack-sshkey-bin
+
 
 ## Building for release
 
