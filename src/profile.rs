@@ -3,9 +3,9 @@ pub fn extract_sshkey_from_profile(
     profile_json: serde_json::Value,
 ) -> Result<String, String> {
     extract_user_profile(username, &profile_json)
-        .and_then(|profile| extract_accounts(profile))
+        .and_then(extract_accounts)
         .and_then(|accounts| extract_ssh_service(accounts.to_owned()))
-        .and_then(|ssh_service| extract_ssh_public_key(&ssh_service))
+        .and_then(extract_ssh_public_key)
         .ok_or(String::from("Unable to extract SSH key"))
 }
 
@@ -32,7 +32,7 @@ fn extract_ssh_service(accounts: Vec<serde_json::Value>) -> Option<serde_json::V
         .map(|val| val.to_owned())
 }
 
-fn extract_ssh_public_key(ssh_account: &serde_json::Value) -> Option<String> {
+fn extract_ssh_public_key(ssh_account: serde_json::Value) -> Option<String> {
     let id = &ssh_account["identifier"];
     id.as_str().map(|s| String::from(s))
 }
