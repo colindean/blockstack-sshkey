@@ -36,3 +36,23 @@ fn extract_ssh_public_key(ssh_account: serde_json::Value) -> Option<String> {
     let id = &ssh_account["identifier"];
     id.as_str().map(String::from)
 }
+
+#[test]
+fn test_valid_json() {
+    let json_text = r#"
+      {"test": {
+        "profile": {
+          "account":
+            [
+              {
+                "service":"ssh",
+                "identifier":"yep"
+              }
+            ]
+          }
+        }
+      }
+    "#;
+    let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
+    assert_eq!(extract_sshkey_from_profile("test", json), Ok(String::from("yep")))
+}
