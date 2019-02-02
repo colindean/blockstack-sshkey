@@ -56,3 +56,36 @@ fn test_valid_json() {
     let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
     assert_eq!(extract_sshkey_from_profile("test", json), Ok(String::from("yep")))
 }
+
+#[test]
+fn test_no_sshkey_identifier() {
+    let json_text = r#"
+      {"test": {
+        "profile": {
+          "account":
+            [
+              {
+                "service":"ssh"
+              }
+            ]
+          }
+        }
+      }
+    "#;
+    let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
+    assert_eq!(extract_sshkey_from_profile("test", json), Err(String::from("Unable to extract SSH key")))
+}
+
+#[test]
+fn test_no_ssh_service() {
+    let json_text = r#"
+      {"test": {
+        "profile": {
+          "account": []
+          }
+        }
+      }
+    "#;
+    let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
+    assert_eq!(extract_sshkey_from_profile("test", json), Err(String::from("Unable to extract SSH key")))
+}
