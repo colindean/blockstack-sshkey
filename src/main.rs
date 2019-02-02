@@ -2,6 +2,7 @@ extern crate reqwest;
 extern crate serde_json;
 
 use std::env;
+use std::error::Error;
 
 fn main() {
     get_usernames().iter().for_each(|username| {
@@ -19,34 +20,33 @@ fn get_usernames() -> Vec<String> {
 
 const BLOCKSTACK_PROFILE_ENDPOINT_TEMPLATE: &str = "https://core.blockstack.org/v1/users/:username";
 
-fn retrieve_key_for_user(username: &str) -> Result<String, &'static str> {
-    let profile_json = retrieve_user_profile(username);
-    let ssh_key = extract_sshkey_from_profile(username, profile_json);
-    ssh_key
+fn retrieve_key_for_user(username: &str) -> Result<String, String> {
+    let profile_json = retrieve_user_profile(username).map_err(|err|err.to_string())?;
+    let ssh_key = extract_sshkey_from_profile(username, profile_json)?;
+    Ok(ssh_key)
 }
 
-fn extract_sshkey_from_profile(
-    username: &str,
-    profile_json: serde_json::Value,
-) -> Result<String, &'static str> {
-    extract_user_profile(username, &profile_json)
-        .and_then(|profile| extract_accounts(profile))
-        .and_then(|accounts| extract_ssh_service(accounts.to_owned()))
-        .and_then(|ssh_service| extract_ssh_public_key(&ssh_service))
-        .ok_or("Unable to extract SSH key")
-}
-
-fn retrieve_user_profile(username: &str) -> serde_json::Value {
+fn retrieve_user_profile(username: &str) -> Result<serde_json::Value, reqwest::Error> {
     let url = build_profile_url(&username);
-    reqwest::get(url.as_str())
-        .expect("Retrieval failure")
-        .json()
-        .expect("Oh noes")
+
+    reqwest::get(url.as_str())?.error_for_status()?.json::<serde_json::Value>()
 }
 
 fn build_profile_url(username: &str) -> String {
     String::from(BLOCKSTACK_PROFILE_ENDPOINT_TEMPLATE).replace(":username", username)
 }
+
+fn extract_sshkey_from_profile(
+    username: &str,
+    profile_json: serde_json::Value,
+) -> Result<String, String> {
+    extract_user_profile(username, &profile_json)
+        .and_then(|profile| extract_accounts(profile))
+        .and_then(|accounts| extract_ssh_service(accounts.to_owned()))
+        .and_then(|ssh_service| extract_ssh_public_key(&ssh_service))
+        .ok_or(String::from("Unable to extract SSH key"))
+}
+
 fn extract_user_profile(
     username: &str,
     profile_json: &serde_json::Value,
