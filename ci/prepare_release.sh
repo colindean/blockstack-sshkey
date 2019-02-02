@@ -38,7 +38,7 @@ mk_tarball() {
     cp "target/$TARGET/release/${BINARY_NAME}" "$staging/${BINARY_NAME}"
     "${gcc_prefix}strip" "$staging/${BINARY_NAME}"
     # Copy the licenses and README.
-    cp {README.md,LICENSE-MIT} "$staging/"
+    cp {README.md,LICENSE.md} "$staging/"
 
     (cd "$tmpdir" && tar czf "$out_dir/$name.tar.gz" "$name")
     rm -rf "$tmpdir"
