@@ -20,7 +20,7 @@ fn extract_user_profile(
 //      This would reduce these next few methods to something like
 //      profile.accounts.find(|item|item.service == "ssh").map(|ssh|ssh.identifer)
 //      with the cost of maintaining the struct…
-fn extract_accounts<'a>(profile_json: serde_json::Value) -> Option<Vec<serde_json::Value>> {
+fn extract_accounts(profile_json: serde_json::Value) -> Option<Vec<serde_json::Value>> {
     let accounts_value = &profile_json["profile"]["account"];
     accounts_value.as_array().map(|array| array.to_vec())
 }
