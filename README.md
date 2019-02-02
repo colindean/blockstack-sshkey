@@ -17,12 +17,12 @@ Tap and install with:
     brew tap colindean/blockstack-sshkey https://github.com/colindean/blockstack-sshkey.git
     brew install blockstack-sshkey-bin
 
+## Releasing
 
-## Building for release
+Releases are built when tags are pushed to CI.
 
-    cargo build --release
-
-Release automation forthcoming.
+    git tag -a ${VERSION:0.0.0}
+    git push && git push --tags
 
 ## ⚠ Production usage warning
 
