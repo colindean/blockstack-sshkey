@@ -4,7 +4,7 @@ pub fn extract_sshkey_from_profile(
 ) -> Result<String, String> {
     extract_user_profile(username, &profile_json)
         .and_then(extract_accounts)
-        .and_then(|accounts| extract_ssh_service(accounts.to_owned()))
+        .and_then(extract_ssh_service)
         .and_then(extract_ssh_public_key)
         .ok_or(String::from("Unable to extract SSH key"))
 }
