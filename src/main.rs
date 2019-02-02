@@ -2,16 +2,14 @@ extern crate reqwest;
 extern crate serde_json;
 
 use std::env;
-use std::error::Error;
 
 fn main() {
-    get_usernames().iter().for_each(|username| {
-        let key = retrieve_key_for_user(username);
-        match key {
+    get_usernames()
+        .iter()
+        .for_each(|username| match retrieve_key_for_user(username) {
             Ok(keytext) => println!("{}", keytext),
             Err(error) => eprintln!("{}", error),
-        }
-    })
+        })
 }
 
 fn get_usernames() -> Vec<String> {
@@ -21,7 +19,7 @@ fn get_usernames() -> Vec<String> {
 const BLOCKSTACK_PROFILE_ENDPOINT_TEMPLATE: &str = "https://core.blockstack.org/v1/users/:username";
 
 fn retrieve_key_for_user(username: &str) -> Result<String, String> {
-    let profile_json = retrieve_user_profile(username).map_err(|err|err.to_string())?;
+    let profile_json = retrieve_user_profile(username).map_err(|err| err.to_string())?;
     let ssh_key = extract_sshkey_from_profile(username, profile_json)?;
     Ok(ssh_key)
 }
@@ -29,7 +27,9 @@ fn retrieve_key_for_user(username: &str) -> Result<String, String> {
 fn retrieve_user_profile(username: &str) -> Result<serde_json::Value, reqwest::Error> {
     let url = build_profile_url(&username);
 
-    reqwest::get(url.as_str())?.error_for_status()?.json::<serde_json::Value>()
+    reqwest::get(url.as_str())?
+        .error_for_status()?
+        .json::<serde_json::Value>()
 }
 
 fn build_profile_url(username: &str) -> String {
