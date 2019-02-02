@@ -1,3 +1,6 @@
+use std::error::Error as StdError;
+use std::fmt;
+
 pub fn extract_sshkey_from_profile(
     username: &str,
     profile_json: serde_json::Value,
@@ -50,6 +53,56 @@ fn extract_ssh_public_key(ssh_account: serde_json::Value) -> Result<String, Stri
             "The SSH service is present but missing its identifier, which is the key text.",
         )
     })
+}
+
+pub struct ExtractionError {
+    inner: Box<ErrorInner>,
+}
+struct ErrorInner {
+    kind: Kind,
+}
+impl ExtractionError {
+    fn new(kind: Kind) -> ExtractionError {
+        ExtractionError {
+            inner: Box::new(ErrorInner {
+                kind,
+            }),
+        }
+    }
+}
+#[derive(Debug)]
+pub(crate) enum Kind {
+    MissingUserProperty(String),
+    MissingProfileOrAccount,
+    MissingSshService,
+    MissingSshIdentifier,
+}
+impl fmt::Debug for ExtractionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("ExtractionError")
+            .field("kind", &self.inner.kind)
+            .finish()
+    }
+}
+impl fmt::Display for ExtractionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self.inner.kind {
+            Kind::MissingUserProperty(username) => write!(f, "The user property '{}' is missing from the JSON object.", username),
+            Kind::MissingProfileOrAccount => f.write_str("The profile or its account object are missing."),
+            Kind::MissingSshService => f.write_str("No service of type ssh was found in profile account list."),
+            Kind::MissingSshIdentifier => f.write_str("The SSH service is present but missing its identifier, which is the key text."),
+        }
+    }
+}
+impl StdError for ExtractionError {
+    fn description(&self) -> &str {
+        match self.inner.kind {
+            Kind::MissingUserProperty(_) => "The property containing the username is missing from the JSON object.",
+            Kind::MissingProfileOrAccount => "The profile or its account object are missing.",
+            Kind::MissingSshService => "No service of type ssh was found in profile account list.",
+            Kind::MissingSshIdentifier => "The SSH service is present but missing its identifier, which is the key text.",
+        }
+    }
 }
 
 #[test]
