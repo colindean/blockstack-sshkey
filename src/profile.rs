@@ -6,14 +6,22 @@ pub fn extract_sshkey_from_profile(
         .and_then(extract_accounts)
         .and_then(extract_ssh_service)
         .and_then(extract_ssh_public_key)
-        //.ok_or_else(|| String::from("Unable to extract SSH key"))
+    //.ok_or_else(|| String::from("Unable to extract SSH key"))
 }
 
 fn extract_user_profile(
     username: &str,
     profile_json: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
-    profile_json.get(username).map(|val| val.to_owned()).ok_or_else(||String::from(format!("The user property '{}' is missing from the JSON object.", username)))
+    profile_json
+        .get(username)
+        .map(|val| val.to_owned())
+        .ok_or_else(|| {
+            String::from(format!(
+                "The user property '{}' is missing from the JSON object.",
+                username
+            ))
+        })
 }
 
 //TODO: model the profile object as a struct and let serde handle this
@@ -22,7 +30,10 @@ fn extract_user_profile(
 //      with the cost of maintaining the struct…
 fn extract_accounts(profile_json: serde_json::Value) -> Result<Vec<serde_json::Value>, String> {
     let accounts_value = &profile_json["profile"]["account"];
-    accounts_value.as_array().map(|array| array.to_vec()).ok_or_else(|| String::from("The profile or its account object are missing."))
+    accounts_value
+        .as_array()
+        .map(|array| array.to_vec())
+        .ok_or_else(|| String::from("The profile or its account object are missing."))
 }
 
 fn extract_ssh_service(accounts: Vec<serde_json::Value>) -> Result<serde_json::Value, String> {
@@ -35,7 +46,11 @@ fn extract_ssh_service(accounts: Vec<serde_json::Value>) -> Result<serde_json::V
 
 fn extract_ssh_public_key(ssh_account: serde_json::Value) -> Result<String, String> {
     let id = &ssh_account["identifier"];
-    id.as_str().map(String::from).ok_or_else(||String::from("The SSH service is present but missing its identifier, which is the key text."))
+    id.as_str().map(String::from).ok_or_else(|| {
+        String::from(
+            "The SSH service is present but missing its identifier, which is the key text.",
+        )
+    })
 }
 
 #[test]
@@ -55,7 +70,10 @@ fn test_valid_json() {
       }
     "#;
     let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
-    assert_eq!(extract_sshkey_from_profile("test", json), Ok(String::from("yep")))
+    assert_eq!(
+        extract_sshkey_from_profile("test", json),
+        Ok(String::from("yep"))
+    )
 }
 
 #[test]
@@ -74,7 +92,12 @@ fn test_no_sshkey_identifier() {
       }
     "#;
     let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
-    assert_eq!(extract_sshkey_from_profile("test", json), Err(String::from("The SSH service is present but missing its identifier, which is the key text.")))
+    assert_eq!(
+        extract_sshkey_from_profile("test", json),
+        Err(String::from(
+            "The SSH service is present but missing its identifier, which is the key text."
+        ))
+    )
 }
 
 #[test]
@@ -88,7 +111,12 @@ fn test_no_ssh_service() {
       }
     "#;
     let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
-    assert_eq!(extract_sshkey_from_profile("test", json), Err(String::from("No service of type ssh was found in profile account list.")))
+    assert_eq!(
+        extract_sshkey_from_profile("test", json),
+        Err(String::from(
+            "No service of type ssh was found in profile account list."
+        ))
+    )
 }
 
 #[test]
@@ -97,5 +125,10 @@ fn test_no_user_property() {
       {}
     "#;
     let json = serde_json::from_str::<serde_json::Value>(json_text).unwrap();
-    assert_eq!(extract_sshkey_from_profile("test", json), Err(String::from("The user property 'test' is missing from the JSON object.")))
+    assert_eq!(
+        extract_sshkey_from_profile("test", json),
+        Err(String::from(
+            "The user property 'test' is missing from the JSON object."
+        ))
+    )
 }
