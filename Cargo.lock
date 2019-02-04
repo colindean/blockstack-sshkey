@@ -87,7 +87,7 @@ dependencies = [
 
 [[package]]
 name = "blockstack-sshkey"
-version = "0.1.5-alpha.0"
+version = "0.2.0"
 dependencies = [
  "cargo-release 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
