@@ -7,7 +7,13 @@ to retrieve that profile and extract the SSH key from it in a format that
 enables a direct-to-`authorized_keys` pipeline:
 
     blockstack-sshkey colindean.id >> ~/.ssh/authorized_keys
-    
+
+## Configuration
+
+By default, the endpoint used is `https://core.blockstack.org`. To use a
+different endpoint, set the `ENDPOINT` environment variable. See
+`src/retrieve.rs` for URLs used.
+
 ## Installation
 
 [Homebrew](https://brew.sh) is the supported method of installing binaries.
