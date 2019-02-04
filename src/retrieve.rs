@@ -14,21 +14,28 @@ pub fn retrieve_user_profile(username: &str) -> Result<serde_json::Value, reqwes
 }
 
 fn build_profile_url(username: &str) -> String {
-    let endpoint = env::var("ENDPOINT")
-        .unwrap_or_else(|_| String::from(BLOCKSTACK_NODE_ENDPOINT_DEFAULT));
+    let endpoint =
+        env::var("ENDPOINT").unwrap_or_else(|_| String::from(BLOCKSTACK_NODE_ENDPOINT_DEFAULT));
     format!(
         "{}{}",
         endpoint,
-        String::from(BLOCKSTACK_API_USERS_ENDPOINT_TEMPLATE).replace(":username", username))
+        String::from(BLOCKSTACK_API_USERS_ENDPOINT_TEMPLATE).replace(":username", username)
+    )
 }
 
 #[test]
 fn creates_url_from_default() {
-    assert_eq!(build_profile_url("test"), String::from("https://core.blockstack.org/v1/users/test"))
+    assert_eq!(
+        build_profile_url("test"),
+        String::from("https://core.blockstack.org/v1/users/test")
+    )
 }
 #[test]
 fn creates_url_from_env_override() {
     env::set_var("ENDPOINT", "https://example.test");
-    assert_eq!(build_profile_url("test"), String::from("https://example.test/v1/users/test"));
+    assert_eq!(
+        build_profile_url("test"),
+        String::from("https://example.test/v1/users/test")
+    );
     env::remove_var("ENDPOINT")
 }
